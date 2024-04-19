@@ -2,6 +2,7 @@
 
 import { sequelize } from '../database'
 import { DataTypes, Model, Optional } from 'sequelize'
+import bcrypt from 'bcrypt'
 
 export interface User {
   id: number
@@ -20,7 +21,7 @@ export interface UserCreationAttributes
 export interface UserInstance
   extends Model<User, UserCreationAttributes>, User {}
 
-export const User = sequelize.define<UserInstance, User>('User', {
+export const User = sequelize.define<UserInstance, User>('users', {
   id: {
     allowNull: false,
     autoIncrement: true,
@@ -58,5 +59,14 @@ export const User = sequelize.define<UserInstance, User>('User', {
   role: {
     allowNull: false,
     type: DataTypes.STRING
-  }
+  },
+  
+},{
+    hooks: {
+        beforeSave: async (user) => {
+            if(user.isNewRecord || user.changed('password')){
+                user.password = await bcrypt.hash(user.password.toString(), 10)
+            }
+        }
+    }
 })
